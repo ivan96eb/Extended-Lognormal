@@ -17,8 +17,9 @@ def Gn(x, n, params, n_samples=500000):
     """
     
     # Generate standard normal samples for normalization computation
-    np.random.seed(42)
-    x_samples = np.random.normal(0, 1, n_samples)
+    # Use a local RandomState that doesn't affect global np.random
+    rng = np.random.RandomState(42)  # ← This creates an isolated random generator
+    x_samples = rng.normal(0, 1, n_samples)  # ← Use rng, not np.random
     
     def compute_normalization(params):
         """Compute n such that E[n*arg - 1] = 0"""
@@ -49,7 +50,7 @@ def Gn(x, n, params, n_samples=500000):
     elif n == '3':
         a, b, c = params
         arg = np.exp(a * x - 0.5 * a**2) + b*x + c
-        norm = compute_normalization(params)
+        norm = 1/(1+c)
         return norm * arg - 1
     
     elif n == '4':

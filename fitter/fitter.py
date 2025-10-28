@@ -133,8 +133,9 @@ def fit_gn_to_data(x_data, y_data, n, initial_params=None, n_samples=500000):
         print(f"Smart initialization for G{n}: {initial_params}")
     
     # Generate standard normal samples for normalization computation
-    np.random.seed(42)
-    x_samples = np.random.normal(0, 1, n_samples)
+    # Use a local RandomState that doesn't affect global np.random
+    rng = np.random.RandomState(42)  # ← This creates an isolated random generator
+    x_samples = rng.normal(0, 1, n_samples)  # ← Use rng, not np.random
     
     def compute_normalization(params):
         """Compute n such that E[n*arg - 1] = 0"""

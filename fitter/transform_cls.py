@@ -114,17 +114,24 @@ def C_NG_to_C_G(cl_NG, fitted_params, N_bins, N,
         params_j = fitted_params[j]
         
         # Build lookup table for F(xi_g)
-        F_values = build_lookup_table(N, params_i, params_j, xi_g_grid, pre, Nnodes)
-        F_to_xi_g = interp1d(F_values, xi_g_grid, kind='linear',
-                            fill_value='extrapolate')
+
         
         # C_l -> xi_NG using precomputed Legendre polynomials
         ell_col = ell_array[:, np.newaxis]
         arg = (2*ell_col + 1) * P_ell * cl_NG[i, j, :, np.newaxis]
         xi_NG = np.sum(arg, axis=0) / (4*np.pi)
         
-        # Apply nonlinear mapping: xi_NG -> xi_G
-        xi_G = F_to_xi_g(xi_NG)
+        if N == '2':
+            alpha_i, beta_i = params_i
+            alpha_j, beta_j = params_j
+            # ξ_NG = β_i × β_j × (exp(α_i×α_j×ξ_G) - 1)
+            # => ξ_G = log(1 + ξ_NG/(β_i×β_j)) / (α_i×α_j)
+            xi_G = np.log(1 + xi_NG / (beta_i * beta_j)) / (alpha_i * alpha_j)
+        else:
+            F_values = build_lookup_table(N, params_i, params_j, xi_g_grid, pre, Nnodes)
+            F_to_xi_g = interp1d(F_values, xi_g_grid, kind='linear',
+                                fill_value='extrapolate')
+            xi_G = F_to_xi_g(xi_NG)
         
         # Backward transform: xi_G -> C_l using precomputed Legendre polynomials
         integrand = P_ell * xi_G[np.newaxis, :]

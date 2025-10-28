@@ -79,7 +79,7 @@ def get_kappa_pixwin(y_maps,nbins,N,fitted_params,nside,pixwinatell):
         k_nf = Gn(y_maps[i], N, fitted_params[i])
         k = k_nf
         klm = hp.map2alm(k,lmax=lmax)
-        klm *= pixwinatell
+        klm = klm * pixwinatell 
         k = hp.alm2map(klm,nside)
         k_list.append(k)  
     k_arr  = np.array(k_list)
