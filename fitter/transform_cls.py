@@ -59,7 +59,7 @@ def build_lookup_table(n, params_i,params_j, xi_g_values, pre,nnodes=20):
 
 
 def C_NG_to_C_G(cl_NG, fitted_params, N_bins, N, 
-                          xig_grid_size=100, quad_order=3, Nnodes=16, 
+                          xig_grid_size=75, quad_order=2, Nnodes=16, 
                           n_jobs=-1, v=0):
     """
     OPTIMIZED VERSION using Gauss-Legendre quadrature with precomputed Legendre polynomials.
