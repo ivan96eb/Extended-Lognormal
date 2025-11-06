@@ -89,8 +89,8 @@ def debiaser(cl_NG,N,params,pixwin,pixwinellfilter,N_iter=3,Nmocks=200):
         print(f'Iteration {i}')
         cl_G       = C_NG_to_C_G(cl_NG_corr,params,Nbins,N)
         diagnose_cl_G(cl_G)
-        avg_ratio = cl_mock_avg(cl_NG,cl_G,params,pixwin,pixwinellfilter,N)
+        avg_ratio = cl_mock_avg(cl_NG,cl_G,params,pixwin,pixwinellfilter,N,Nmocks)
         A         = Acoeff(avg_ratio)
         print('beta=',1/A)
-        cl_NG_corr = correct_mult_cl(cl_NG,A)
+        cl_NG_corr = correct_mult_cl(cl_NG_corr,A)
     return cl_NG_corr
