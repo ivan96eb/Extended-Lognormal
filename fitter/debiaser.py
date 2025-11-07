@@ -1,6 +1,6 @@
 import numpy as np 
 import healpy as hp
-import time
+from scipy.signal import savgol_filter
 from multiprocessing import Pool
 from .transform_cls import C_NG_to_C_G,diagnose_cl_G
 from .mocker import get_y_maps,get_kappa,get_kappa_pixwin
@@ -18,8 +18,8 @@ def correct_mult_cl(cl,A):
 def cl_mock_avg(cl_NG,cl_G,fitted_params,pixwin,pixwin_ell_filter,N,N_mocks=200,Nside=256,N_bins=4,gen_lmax=767):
     cl_arr  = np.zeros((N_mocks,N_bins,N_bins,gen_lmax+1))
     for mock in range(N_mocks):
-        #if mock % 50 == 0:
-        print(f'Working on mock {mock}')
+        if mock % 50 == 0:
+            print(f'Working on mock {mock}')
         y_maps, _      = get_y_maps(cl_G, Nside, N_bins, gen_lmax)
         kappa_mock     = get_kappa_pixwin(y_maps, N_bins, N, fitted_params,Nside,pixwin_ell_filter)
         for i in range(N_bins):
@@ -117,3 +117,23 @@ def smooth_pixwin_savgol(pixwin, window_length=11, polyorder=3):
         return savgol_filter(pixwin_interp, window_length, polyorder)
     else:
         return savgol_filter(pixwin, window_length, polyorder)
+    
+def debiaser_premium(cl_NG,N,params,pixwin,pixwinellfilter,N_iter=3,Nmocks=200):
+    Nbins = cl_NG.shape[0]
+    cl_NG_corr = cl_NG 
+    for i in range(N_iter):
+        print(f'Iteration {i}')
+        cl_G       = C_NG_to_C_G(cl_NG_corr,params,Nbins,N)
+        diagnose_cl_G(cl_G)
+        avg_ratio = cl_mock_avg(cl_NG,cl_G,params,pixwin,pixwinellfilter,N,Nmocks)
+        smooth_bias = np.ones_like(avg_ratio)  
+        for i in range(Nbins):
+            for j in range(i+1):
+                ratio_ij = smooth_pixwin_savgol(avg_ratio[i,j,2:2*256],window_length=50)
+                smooth_bias[i,j,2:2*256] = ratio_ij
+                smooth_bias[j,i,2:2*256] = ratio_ij
+        print('beta=',1/Acoeff(avg_ratio))
+        beta = np.array([smooth_bias[i,i] for i in range(Nbins)])
+        A = 1/beta
+        cl_NG_corr = correct_mult_cl(cl_NG_corr,A)
+    return cl_NG_corr
