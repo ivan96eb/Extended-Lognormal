@@ -18,8 +18,8 @@ def correct_mult_cl(cl,A):
 def cl_mock_avg(cl_NG,cl_G,fitted_params,pixwin,pixwin_ell_filter,N,N_mocks=200,Nside=256,N_bins=4,gen_lmax=767):
     cl_arr  = np.zeros((N_mocks,N_bins,N_bins,gen_lmax+1))
     for mock in range(N_mocks):
-        if mock % 50 == 0:
-            print(f'Working on mock {mock}')
+        #if mock % 50 == 0:
+        print(f'Working on mock {mock}')
         y_maps, _      = get_y_maps(cl_G, Nside, N_bins, gen_lmax)
         kappa_mock     = get_kappa_pixwin(y_maps, N_bins, N, fitted_params,Nside,pixwin_ell_filter)
         for i in range(N_bins):
@@ -94,3 +94,26 @@ def debiaser(cl_NG,N,params,pixwin,pixwinellfilter,N_iter=3,Nmocks=200):
         print('beta=',1/A)
         cl_NG_corr = correct_mult_cl(cl_NG_corr,A)
     return cl_NG_corr
+
+def smooth_pixwin_savgol(pixwin, window_length=11, polyorder=3):
+    """Savitzky-Golay smoothing - great for preserving peaks"""
+    # Make sure window_length is odd and smaller than data length
+    window_length = min(window_length, len(pixwin))
+    if window_length % 2 == 0:
+        window_length -= 1
+    if window_length < 3:
+        return pixwin
+    
+    # Handle NaN values
+    if np.any(~np.isfinite(pixwin)):
+        mask = np.isfinite(pixwin)
+        if np.sum(mask) < window_length:
+            return pixwin
+        
+        # Interpolate over NaN values first
+        pixwin_interp = np.interp(np.arange(len(pixwin)), 
+                                np.arange(len(pixwin))[mask], 
+                                pixwin[mask])
+        return savgol_filter(pixwin_interp, window_length, polyorder)
+    else:
+        return savgol_filter(pixwin, window_length, polyorder)
