@@ -125,7 +125,7 @@ def debiaser_premium(cl_NG,N,params,pixwin,pixwinellfilter,N_iter=3,Nmocks=200):
         print(f'Iteration {i}')
         cl_G       = C_NG_to_C_G(cl_NG_corr,params,Nbins,N)
         diagnose_cl_G(cl_G)
-        avg_ratio = cl_mock_avg(cl_NG,cl_G,params,pixwin,pixwinellfilter,N,Nmocks)
+        avg_ratio = cl_mock_avg(cl_NG,cl_G,params,pixwin,pixwinellfilter,N,Nmocks,N_bins=Nbins)
         smooth_bias = np.ones_like(avg_ratio)  
         for i in range(Nbins):
             for j in range(i+1):
